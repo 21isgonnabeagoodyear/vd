@@ -3,16 +3,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
 #define SCREENW 1024
 #define SCREENH 600
 #define SCREENW 640
 #define SCREENH 480
-
+*/
 
 
 #define SCREENW 800
-#define SCREENH 300
+//#define SCREENH 300
+#define SCREENH 320
 
+#include "level.c"
 
 struct 
 {
@@ -84,7 +87,7 @@ void parsekeys()
 
 	}
 
-	printf("key states r%dl%du%dd%dj%d\n", keystates.r,keystates.l,keystates.u,keystates.d,keystates.j);
+	//printf("key states r%dl%du%dd%dj%d\n", keystates.r,keystates.l,keystates.u,keystates.d,keystates.j);
 
 
 
@@ -120,6 +123,7 @@ int main()
 		if(keystates.l)
 			i /= 1.1;
 		SDL_FillRect(screen, &srect, 0x000000);
+		lvl_test(screen);
 		SDL_FillRect(screen, &drect, 0xff00ff);
 		srand(0);
 		int j;
@@ -144,6 +148,7 @@ int main()
 			//printf("col %x %d %d\n",col, trect.x, trect.y);
 
 		}
+		lvl_test(screen);
 		SDL_Flip(screen);
 	//	SDL_Delay(16);
 	}
