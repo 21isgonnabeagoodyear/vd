@@ -12,7 +12,7 @@
 #define TILESIZE 32
 #define TILESW SCREENW/TILESIZE
 #define TILESH SCREENH/TILESIZE 
-#define MAXENTS 10
+#define MAXENTS 50
 
 
 

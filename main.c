@@ -15,6 +15,9 @@
 #include "level.h"
 #include "scripting.h"
 
+
+
+
 struct 
 {
 	char j;
@@ -22,14 +25,16 @@ struct
 	char d;
 	char l;
 	char r;
-}keystates;
+
+	char e;
+}keystates = {0};
 char quitnow = 0;
 
 void parsekeys()
 {
 	//set keys to "are down" from "pushed"
 	int i;
-	for(i=0;i<5;i++)
+	for(i=0;i<6;i++)
 		if(((char*)&keystates)[i] ==1)
 			((char*)&keystates)[i] =2;
 
@@ -49,6 +54,10 @@ void parsekeys()
 				keystates.d = 1;//printf("r\n");
 			if(((SDL_KeyboardEvent*)&evt)->keysym.sym == SDLK_z)
 				keystates.j = 1;//printf("r\n");
+
+			if(((SDL_KeyboardEvent*)&evt)->keysym.sym == SDLK_e)
+				keystates.e = 1;//printf("r\n");
+
 			if(((SDL_KeyboardEvent*)&evt)->keysym.sym == SDLK_ESCAPE)
 			{
 				quitnow = 1;
@@ -75,6 +84,9 @@ void parsekeys()
 				keystates.d = 0;//printf("r\n");
 			if(((SDL_KeyboardEvent*)&evt)->keysym.sym == SDLK_z)
 				keystates.j = 0;//printf("r\n");
+
+			if(((SDL_KeyboardEvent*)&evt)->keysym.sym == SDLK_e)
+				keystates.e = 0;
 		}
 		else if(evt.type == SDL_QUIT)
 		{
@@ -92,6 +104,98 @@ void parsekeys()
 }
 
 
+void editmain(SDL_Surface *screen, lvl_level *workingon)
+{
+	SDL_Rect srect = {0,0,SCREENW,SCREENH};
+//	printf("editor not implemented yet\n");
+	int tiletoset = 0;
+	char mode = 0;//0 = tiles, 1 = ents
+	while(!quitnow)
+	{
+		parsekeys();
+		char * alltheotherkeys = SDL_GetKeyState(NULL);
+		if(keystates.e == 1)
+			break;
+		if(keystates.u == 1)
+			tiletoset ++;
+		if(keystates.d == 1)
+			tiletoset --;
+		if(alltheotherkeys[SDLK_0])
+			tiletoset = 0;
+		if(alltheotherkeys[SDLK_q])
+			mode = 1;
+		if(alltheotherkeys[SDLK_w])
+			mode = 0;
+		int mousex, mousey;
+		int buttons = SDL_GetMouseState(&mousex, &mousey);
+		SDL_Rect r = {mousex-1, mousey-1, TILESIZE+2, TILESIZE+2};
+		if(buttons & 0x1)
+		{
+			SDL_FillRect(screen, &r, 0xff0000);
+			if(!mode)
+				workingon->infront[mousex/TILESIZE][mousey/TILESIZE].tile = tiletoset;
+			else
+			{
+				if(workingon->numinfrontents >= MAXENTS)
+					printf("too many ents\n");
+				else
+				{
+					//TODO:get logic from some clever place
+					strcpy(workingon->infrontents[workingon->numinfrontents ].logic, "default");
+
+					workingon->infrontents[workingon->numinfrontents  ].frame = 5;
+					workingon->infrontents[workingon->numinfrontents  ].x = mousex;
+					workingon->infrontents[workingon->numinfrontents++].y = mousey;
+					printf("finns %d ents\n", workingon->numinfrontents);
+				}
+				mode = 0;
+			}
+		}
+		else if(buttons & 0x4)
+		{
+			SDL_FillRect(screen, &r, 0x00ff00);
+			if(!mode)
+				workingon->behind[mousex/TILESIZE][mousey/TILESIZE].tile = tiletoset;
+				else
+				{
+					//TODO:get logic from some clever place
+					strcpy(workingon->behindents[workingon->numbehindents ].logic, "default");
+
+					workingon->behindents[workingon->numbehindents].frame = 5;
+					workingon->behindents[workingon->numbehindents].x = mousex;
+					workingon->behindents[workingon->numbehindents++].y = mousey;
+					printf("finns %d ents\n", workingon->numbehindents);
+				}
+				mode = 0;
+		}
+		else
+		{
+			SDL_FillRect(screen, &r, 0x000000);
+		}
+
+		if(!mode)
+			ss_draw(0/*FIXME:pulled this 0 out my ass, use the actual one from the level*/, screen, tiletoset, mousex, mousey);
+		else
+			ss_draw(1/*FIXME:pulled this 0 out my ass, use the actual one from the level*/, screen, tiletoset, mousex, mousey);
+		
+		SDL_Flip(screen);
+		SDL_FillRect(screen, &srect, 0x000000);
+		if(alltheotherkeys[SDLK_p] || mode)
+		{
+			lvl_drawfull(workingon, screen);
+		}
+		else if(alltheotherkeys[SDLK_i])
+			lvl_drawsimple(workingon, screen, 0);
+		else if(alltheotherkeys[SDLK_o])
+			lvl_drawsimple(workingon, screen, 1);
+		else
+		{
+			lvl_drawsimple(workingon, screen, 0);
+			lvl_drawsimple(workingon, screen, 1);
+		}
+	}
+	keystates.e = 0;
+}
 
 
 int main()
@@ -105,7 +209,7 @@ int main()
 	SDL_Rect drect = {50,50,100,100};
 	SDL_Rect srect = {0,0,SCREENW,SCREENH};
 
-	SDL_Surface *testbmp = SDL_LoadBMP("lena.bmp");
+	//SDL_Surface *testbmp = SDL_LoadBMP("lena.bmp");
 	SDL_Rect smallr = {200,200,50,50};
 
 	unsigned long stime = SDL_GetTicks();
@@ -117,7 +221,7 @@ int main()
 	{
 		renderedframes ++;
 		parsekeys();
-		drect.x ++;
+/*		drect.x ++;
 		if(keystates.u)
 			i -=10;
 		if(keystates.d)
@@ -125,33 +229,11 @@ int main()
 		if(keystates.r)
 			i *= 1.1;
 		if(keystates.l)
-			i /= 1.1;
+			i /= 1.1;*/
+		if(keystates.e)
+			editmain(screen, &alevel);
 		SDL_FillRect(screen, &srect, 0x000000);
-		//lvl_test(screen);
-		SDL_FillRect(screen, &drect, 0xff00ff);
-		srand(0);
-		int j;
-		SDL_Rect trect;
-		/*for(j=0;j<500;j++)
-		{
-			smallr.x = (rand()*512.f)/RAND_MAX + (rand()/(float)RAND_MAX -0.5) * i;
-			smallr.y = (rand()*512.f)/RAND_MAX + (rand()/(float)RAND_MAX -0.5) * i;
 
-
-
-			smallr.w = 50+(rand()*50.f)/RAND_MAX + 0.2*(rand()/(float)RAND_MAX -0.5) * i;
-			smallr.h = 50+(rand()*50.f)/RAND_MAX + 0.2*(rand()/(float)RAND_MAX -0.5) * i;
-
-			trect.x = (rand()*640.f)/RAND_MAX + (rand()*3.2/RAND_MAX -1.5) * i;
-			trect.y = (rand()*480.f)/RAND_MAX + (rand()*3.2/RAND_MAX -1.5) * i;
-			trect.w=20;
-			trect.h=20;
-			int col=rand();
-			//SDL_FillRect(screen, &trect, col);
-			SDL_BlitSurface(testbmp, &smallr,screen,&trect);
-			//printf("col %x %d %d\n",col, trect.x, trect.y);
-
-		}*/
 		lvl_thinkents(&alevel);
 		lvl_drawfull(&alevel, screen);
 		//lvl_test(screen);

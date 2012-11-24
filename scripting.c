@@ -29,11 +29,20 @@ static int hook_move(lua_State *L)//function hooks.move(x,y)
 	}
 	return 0;
 }
+static int hook_frame(lua_State *L)//function hooks.move(x,y)
+{
+	if(currentent != NULL)
+	{
+		currentent->frame = lua_tointeger(L,-1);
+	}
+	return 0;
+}
 
 static luaL_Reg hooks[] = 
 {
 	{"log", hook_log},
 	{"move", hook_move},
+	{"frame", hook_frame},
 	{NULL, NULL}
 };
 

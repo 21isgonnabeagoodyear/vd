@@ -1,4 +1,5 @@
 #include "level.h"
+#include "spritesheet.h"
 
 static SDL_Surface *cachedstaticinfront = NULL;
 static SDL_Surface *cachedstaticbehind = NULL;
@@ -18,11 +19,9 @@ void lvl_init(SDL_Surface *screen)
 void lvl_drawsimple(lvl_level *td, SDL_Surface *target,int layer)//layer is whether to draw behind or infront
 {
 	int i,j;
-	static SDL_Surface *simpletex = NULL;//FIXME:do in load or init
-	if(simpletex == NULL)
-		simpletex = SDL_LoadBMP("lena_color.bmp");
-	SDL_Rect tile;
-	SDL_Rect position;
+	static ss_sheet tex = -1;//FIXME:do in load or init
+	if(tex == -1)
+		tex = ss_loadsheet("lena_color.bmp", TILESIZE, TILESIZE);
 	//lvl_tile (*drawlvl)[TILESW][TILESH];
 	lvl_tile (*drawlvl)[TILESH];
 	if(layer ==0)
@@ -32,24 +31,23 @@ void lvl_drawsimple(lvl_level *td, SDL_Surface *target,int layer)//layer is whet
 		//drawlvl = &(td->infront);
 		drawlvl = &(td->infront[0]);
 
-	tile.w = TILESIZE;
-	tile.h = TILESIZE;
+	//tile.w = TILESIZE;
+	//tile.h = TILESIZE;
 
-	position.w = TILESIZE;
-	position.h = TILESIZE;
+	//position.w = TILESIZE;
+	//position.h = TILESIZE;
 	for(i=0;i<TILESW;i++)
 	{
 		for(j=0;j<TILESH;j++)
 		{
-		//	tile.x = TILESIZE*((*drawlvl)[i][j].tile % 10);
-		//	tile.y = TILESIZE*(((*drawlvl)[i][j].tile % 100)/10);
 			if(!drawlvl[i][j].tile)
 				continue;
-			tile.x = TILESIZE*(drawlvl[i][j].tile % 10);
-			tile.y = TILESIZE*((drawlvl[i][j].tile % 100)/10);
-			position.x = TILESIZE*i;
-			position.y = TILESIZE*j;
-			SDL_BlitSurface(simpletex,&tile,target,&position);
+		//	tile.x = TILESIZE*(drawlvl[i][j].tile % 10);
+		//	tile.y = TILESIZE*((drawlvl[i][j].tile % 100)/10);
+		//	position.x = TILESIZE*i;
+		//	position.y = TILESIZE*j;
+		//	SDL_BlitSurface(simpletex,&tile,target,&position);
+			ss_draw(tex, target, drawlvl[i][j].tile,TILESIZE*i, TILESIZE*j);
 		}
 
 	}
@@ -120,7 +118,7 @@ void lvl_genrandom(lvl_level *td)
 	for(i=0;i<TILESW;i++)
 	{
 		for(j=0;j<TILESH;j++)
-			td->behind[i][j].tile = i*2 + j;
+			td->behind[i][j].tile = 8;//i*2 + j;
 	}
 //	lvl_drawsimple(&t,screen,0);
 
@@ -132,13 +130,16 @@ void lvl_genrandom(lvl_level *td)
 			else
 				td->infront[i][j].tile = 0;
 	}
-	for(i=0;i<5;i++)
+	for(i=0;i<20;i++)
 	{
 		strcpy(td->behindents[i].logic, "testent");
 		td->behindents[i].id = i*2;
 		strcpy(td->infrontents[i].logic, "testent");
 		td->infrontents[i].id = i*2+1;
+
+		td->infrontents[i].frame = i*2+1;
+		td->behindents[i].frame = i*2;
 	}
-	td->numbehindents = 5;
-	td->numinfrontents = 5;
+	td->numbehindents = 20;
+	td->numinfrontents = 20;
 }
