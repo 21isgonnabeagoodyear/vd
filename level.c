@@ -1,52 +1,31 @@
+#include "level.h"
 
-//level structures and functions and shit
-#define TILESIZE 32
-#define TILESW SCREENW/TILESIZE
-#define TILESH SCREENH/TILESIZE 
-#define MAXENTS 10
+static SDL_Surface *cachedstaticinfront = NULL;
+static SDL_Surface *cachedstaticbehind = NULL;
 
-
-
-typedef struct
+void lvl_init(SDL_Surface *screen)
 {
-	short tileset;//negative can be special?
-	unsigned short tile;
-	int physics;
-
-} lvl_tile;
-typedef struct
-{
-	short type;
-	int x;
-	int y;
-	int data;//store type dependant data here
-
-} lvl_ent;
-typedef struct lvl_level
-{
-	lvl_tile behind[TILESW][TILESH];//use an array?
-	lvl_tile infront[TILESW][TILESH];
-	lvl_ent behindents[MAXENTS];
-	lvl_ent infrontents[MAXENTS];
-	struct lvl_level *up;//TODO:figure out recursive definition
-	struct lvl_level *down;
-	struct lvl_level *left;
-	struct lvl_level *right;
-} lvl_level;
+	SDL_PixelFormat *pif = screen->format;
+	cachedstaticinfront = SDL_CreateRGBSurface( 0, SCREENW, SCREENH, pif->BitsPerPixel, pif->Rmask, pif->Gmask, pif->Bmask, pif->Amask );
+	cachedstaticbehind = SDL_CreateRGBSurface( 0, SCREENW, SCREENH, pif->BitsPerPixel, pif->Rmask, pif->Gmask, pif->Bmask, pif->Amask );
+	SDL_FillRect( cachedstaticbehind, NULL, 0 );
+	SDL_FillRect( cachedstaticinfront, NULL, 0xff00ff );
+	SDL_SetColorKey( cachedstaticinfront, SDL_SRCCOLORKEY, 0xff00ff);//we only need this for infront since behind will always be opaque
+}
 
 
 
-void lvl_drawsimple(lvl_level *td, SDL_Surface *target,int level)//level is whether to draw behind or infront
+void lvl_drawsimple(lvl_level *td, SDL_Surface *target,int layer)//layer is whether to draw behind or infront
 {
 	int i,j;
 	static SDL_Surface *simpletex = NULL;//FIXME:do in load or init
 	if(simpletex == NULL)
-		simpletex = SDL_LoadBMP("lena.bmp");
+		simpletex = SDL_LoadBMP("lena_color.bmp");
 	SDL_Rect tile;
 	SDL_Rect position;
 	//lvl_tile (*drawlvl)[TILESW][TILESH];
 	lvl_tile (*drawlvl)[TILESH];
-	if(level ==0)
+	if(layer ==0)
 		//drawlvl = &(td->behind);
 		drawlvl = &(td->behind[0]);
 	else
@@ -77,12 +56,36 @@ void lvl_drawsimple(lvl_level *td, SDL_Surface *target,int level)//level is whet
 }
 
 
+void lvl_drawfull(lvl_level *td, SDL_Surface *screen)
+{
+	//SDL_BlitSurface(cachedstaticbehind,NULL,screen,NULL);
+	lvl_drawsimple(td, screen, 0);
+	int i;
+	for(i=0;i<td->numbehindents;i++)
+		ent_draw(&td->behindents[i], screen);
 
+	//SDL_BlitSurface(cachedstaticinfront,NULL,screen,NULL);
+	lvl_drawsimple(td, screen, 1);
+	for(i=0;i<td->numinfrontents;i++)
+		ent_draw(&td->infrontents[i], screen);
+}
 
-void lvl_test(SDL_Surface *screen)
+void lvl_thinkents(lvl_level *tt)
+{
+	int i;
+	for(i=0;i<tt->numbehindents;i++)
+		ent_think(&tt->behindents[i]);
+
+	for(i=0;i<tt->numinfrontents;i++)
+		ent_think(&tt->infrontents[i]);
+}
+
+/*
+void lvl_test(SDL_Surface *screen)//generate a randomish level
 {
 	static char layer = 1;
 	layer = !layer;//oh god what have i done
+	static char  generatedcache = 0;
 	int i,j;
 	lvl_level t;
 	for(i=0;i<TILESW;i++)
@@ -95,19 +98,47 @@ void lvl_test(SDL_Surface *screen)
 	for(i=0;i<TILESW;i++)
 	{
 		for(j=0;j<TILESH;j++)
-			if((i+ j) % 3)
+			if(!((i+ j) % 3))
 				t.infront[i][j].tile = i + 10*j;
 			else
 				t.infront[i][j].tile = 0;
 	}
 //	lvl_drawsimple(&t,screen,1);
-	lvl_drawsimple(&t,screen,layer);
+	if(!generatedcache)
+	{
+		lvl_drawsimple(&t,cachedstaticbehind,0);
+		lvl_drawsimple(&t,cachedstaticinfront,1);
+		generatedcache = 1;
+	}
+	
+	SDL_BlitSurface(layer?cachedstaticinfront:cachedstaticbehind,NULL,screen,NULL);
+
+}*/
+void lvl_genrandom(lvl_level *td)
+{
+	int i, j;
+	for(i=0;i<TILESW;i++)
+	{
+		for(j=0;j<TILESH;j++)
+			td->behind[i][j].tile = i*2 + j;
+	}
+//	lvl_drawsimple(&t,screen,0);
+
+	for(i=0;i<TILESW;i++)
+	{
+		for(j=0;j<TILESH;j++)
+			if(!((i+ j) % 3))
+				td->infront[i][j].tile = i + 10*j;
+			else
+				td->infront[i][j].tile = 0;
+	}
+	for(i=0;i<5;i++)
+	{
+		strcpy(td->behindents[i].logic, "testent");
+		td->behindents[i].id = i*2;
+		strcpy(td->infrontents[i].logic, "testent");
+		td->infrontents[i].id = i*2+1;
+	}
+	td->numbehindents = 5;
+	td->numinfrontents = 5;
 }
-
-
-
-
-
-
-
-

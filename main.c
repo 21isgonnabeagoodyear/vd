@@ -1,4 +1,4 @@
-//gcc -g  sdltest.c -o sdltest `sdl-config --cflags --libs`
+//gcc -g  main.c -o main `sdl-config --cflags --libs` `pkg-config --cflags --libs lua5.2`
 #include <SDL/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,11 +11,9 @@
 */
 
 
-#define SCREENW 800
-//#define SCREENH 300
-#define SCREENH 320
-
-#include "level.c"
+//#include "level.c"
+#include "level.h"
+#include "scripting.h"
 
 struct 
 {
@@ -98,8 +96,12 @@ void parsekeys()
 
 int main()
 {
+	scripting_init();
+
+
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_Surface *screen = SDL_SetVideoMode(SCREENW,SCREENH,32,0*SDL_FULLSCREEN);
+	lvl_init(screen);
 	SDL_Rect drect = {50,50,100,100};
 	SDL_Rect srect = {0,0,SCREENW,SCREENH};
 
@@ -109,6 +111,8 @@ int main()
 	unsigned long stime = SDL_GetTicks();
 	int i;
 	long renderedframes = 0;
+	lvl_level alevel;
+	lvl_genrandom(&alevel);
 	for(i=0;!quitnow;i++)
 	{
 		renderedframes ++;
@@ -123,12 +127,12 @@ int main()
 		if(keystates.l)
 			i /= 1.1;
 		SDL_FillRect(screen, &srect, 0x000000);
-		lvl_test(screen);
+		//lvl_test(screen);
 		SDL_FillRect(screen, &drect, 0xff00ff);
 		srand(0);
 		int j;
 		SDL_Rect trect;
-		for(j=0;j<500;j++)
+		/*for(j=0;j<500;j++)
 		{
 			smallr.x = (rand()*512.f)/RAND_MAX + (rand()/(float)RAND_MAX -0.5) * i;
 			smallr.y = (rand()*512.f)/RAND_MAX + (rand()/(float)RAND_MAX -0.5) * i;
@@ -147,8 +151,10 @@ int main()
 			SDL_BlitSurface(testbmp, &smallr,screen,&trect);
 			//printf("col %x %d %d\n",col, trect.x, trect.y);
 
-		}
-		lvl_test(screen);
+		}*/
+		lvl_thinkents(&alevel);
+		lvl_drawfull(&alevel, screen);
+		//lvl_test(screen);
 		SDL_Flip(screen);
 	//	SDL_Delay(16);
 	}
