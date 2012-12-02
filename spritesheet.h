@@ -1,4 +1,5 @@
 #ifndef SPRITESHEET_H
+#define SPRITESHEET_H
 #include <SDL/SDL.h>
 
 typedef int ss_sheet;

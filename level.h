@@ -1,4 +1,5 @@
 #ifndef LEVEL_H
+#define LEVEL_H
 #include <SDL/SDL.h>
 #include "ent.h"
 
@@ -39,10 +40,11 @@ typedef struct lvl_level
 	ent_entity infrontents[MAXENTS];
 	int numbehindents;
 	int numinfrontents;
-	struct lvl_level *up;//TODO:figure out recursive definition
+/*	struct lvl_level *up;//TODO:figure out recursive definition
 	struct lvl_level *down;
 	struct lvl_level *left;
-	struct lvl_level *right;
+	struct lvl_level *right;*/
+//	struct lvl_level *neighbors[4];
 } lvl_level;
 
 
@@ -55,4 +57,9 @@ void lvl_drawfull(lvl_level *td, SDL_Surface *screen);
 
 
 void lvl_genrandom(lvl_level *td);
+
+
+void lvl_writeworld(lvl_level *tw, char *filename);
+lvl_level *lvl_loadworld(char *filename);
+
 #endif
