@@ -1,4 +1,4 @@
-framenum = 0.0
+framenum = 0
 --playerdamagepoints = {}
 function framestart(notused)
 	if spawnnewplayer then
@@ -223,11 +223,11 @@ function smoke(id)
 end
 
 function sparkles(id)
-	smoketimers[id] = smoketimers[id]-1
-	if smoketimers[id]<0 then
+	if smoketimers[id] == nil or smoketimers[id]<0 then
 		hooks.die()
 		return
 	end
+	smoketimers[id] = smoketimers[id]-1
 	if smoketimers[id] > 5 then
 		hooks.frame(16)
 	else
@@ -238,7 +238,7 @@ end
 --crittertime = 0
 --critterdir = 1
 crittertable={}
-function critterai(id, decisiveness, laziness, mintime,size, baseframe, animframes, animspeed)
+function critterai(id, decisiveness, laziness, mintime,size, baseframe, animframes, facingframes, animspeed)
 	--hooks.log(id, 0)
 	if crittertable[id] == nil then
 		crittertable[id] = {crittertime=0, critterdir=1}
@@ -249,37 +249,66 @@ function critterai(id, decisiveness, laziness, mintime,size, baseframe, animfram
 	end
 	crittertable[id].crittertime = crittertable[id].crittertime-1
 	local pos = {hooks.position()}
-	hooks.frame(baseframe)
+	hooks.frame(baseframe + math.floor(facingframes*(crittertable[id].critterdir+1)*0.499))
+	--hooks.log(facingframes*(crittertable[id].critterdir+1)*0.499, 0)
 	if crittertable[id].critterdir >= laziness and hooks.terrainat(pos[1]+1+size, pos[2] ) ==0 and hooks.terrainat(pos[1]+1+size, pos[2]+32) ~= 0 then
 		--if crittertable[id].critterdir >= laziness then
 			hooks.move(pos[1]+1,pos[2])
-			hooks.frame(baseframe+3+math.floor(crittertable[id].crittertime/animspeed)%animframes)
+			hooks.frame(baseframe+facingframes+math.floor(crittertable[id].crittertime/animspeed)%animframes + animframes)
 		--end
 	elseif crittertable[id].critterdir <= -laziness and hooks.terrainat(pos[1]-1, pos[2]) ==0 and hooks.terrainat(pos[1]-1, pos[2]+32) ~= 0  then
 		--if crittertable[id].critterdir <= -laziness then
 			hooks.move(pos[1]-1,pos[2])
-			hooks.frame(baseframe+1+math.floor(crittertable[id].crittertime/animspeed)%animframes)
+			hooks.frame(baseframe+facingframes+math.floor(crittertable[id].crittertime/animspeed)%animframes)
 		--end
 	elseif math.abs(crittertable[id].critterdir) >= laziness then
-		crittertable[id].crittertime =0
+		--crittertable[id].crittertime =0
+		crittertable[id].critterdir = -crittertable[id].critterdir
 	end
 
 
 end
 function critter(id)
-	critterai(id, 0.5, 0.9, 10,16, 6, 2, 8)
-	critterai(id, 0.5, 0.8, 10,16, 6, 2, 8)
+	critterai(id, 0.5, 0.9, 10,16, 6, 2,1, 8)
+	critterai(id, 0.5, 0.8, 10,16, 6, 2,1, 8)
 
 	local x,y = hooks.position()
 	dieifnec(x+5,y+20)
 end
 function critter2(id)
 	if framenum %2 ==0 then
-		critterai(id, 0.5, 0.5, 10,32, 11, 2, 8)
+		critterai(id, 0.5, 0.5, 10,32, 11, 2,1, 8)
 	end
 	local x,y = hooks.position()
 	dieifnec(x+5,y+20)
 end
+function gnome(id)
+--function critterai(id, decisiveness, laziness, mintime,size, baseframe, animframes, animspeed)
+	critterai(id, 0.2, 0.6, 20, 16, 18, 2,1, 4)
+end
+function deer(id)
+--function critterai(id, decisiveness, laziness, mintime,size, baseframe, animframes, animspeed)
+	if math.floor(framenum+id) % 2 <= 0.1 then
+		critterai(id, 0.8, 0.5, 40, 32, 23, 2,2, 4)
+	end
+end
 
+function snowspawn(id)
+	hooks.frame(36)
+	if math.floor(framenum+id) % 80 <= 0.1 then
+		local x,y = hooks.position()
+		hooks.spawn("snow", x+hooks.rand()-50, y-50)
+	end
+
+end
+function snow(id)
+	hooks.frame(35)
+	local x,y = hooks.position()
+	hooks.move(x-math.sin(id+framenum*0.01), y+1+id%3)
+	if y > 320 then
+		hooks.die()
+	end
+	dieifnec(x+5,y+5)
+end
 
 hooks.log("loaded main.lua", 0)

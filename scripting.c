@@ -172,6 +172,11 @@ static int hook_spawn(lua_State *L)//hook.spawn(name,x,y)->id
 	if(lastspawnedent ==0)lastspawnedent=time(NULL);
 	if(currentlevel != NULL)
 	{
+		if(currentlevel->numinfrontents >= MAXENTS-1)
+		{
+			printf("too many ents\n");
+			return 0;
+		}
 		strncpy(currentlevel->infrontents[currentlevel->numinfrontents].logic, lua_tostring(L, -3), 10);
 		currentlevel->infrontents[currentlevel->numinfrontents].x = lua_tointeger(L, -2);
 		currentlevel->infrontents[currentlevel->numinfrontents].y = lua_tointeger(L, -1);

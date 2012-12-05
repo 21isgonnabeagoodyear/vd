@@ -2,6 +2,7 @@
 #include <SDL/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 
 #define BT
@@ -146,10 +147,11 @@ void editmain(SDL_Surface *screen, world *curworld)
 //	printf("editor not implemented yet\n");
 	int tiletoset = 0;
 	char mode = 0;//0 = tiles, 1 = ents, 2 = delete ents
+	static int lastid = 0;
 
 
-	const int numlogics = 6;
-	char logics[][10] = {"default", "shrubbery", "testent", "player", "critter", "critter2"};
+	const int numlogics = 9;
+	char logics[][10] = {"default", "shrubbery", "testent", "player", "critter", "critter2", "snowspawn", "gnome", "deer"};
 	while(!quitnow)
 	{
 		parsekeys();
@@ -223,7 +225,7 @@ void editmain(SDL_Surface *screen, world *curworld)
 					workingon->infrontents[workingon->numinfrontents  ].frame = 5;
 					workingon->infrontents[workingon->numinfrontents  ].x = alltheotherkeys[SDLK_LSHIFT]?TILESIZE*(mousex/TILESIZE):mousex;
 					workingon->infrontents[workingon->numinfrontents++].y =  alltheotherkeys[SDLK_LSHIFT]?TILESIZE*(mousey/TILESIZE):mousey;
-					workingon->infrontents[workingon->numinfrontents  ].id = clock();
+					workingon->infrontents[workingon->numinfrontents  ].id = clock()*10000+lastid++;
 					printf("finns %d ents\n", workingon->numinfrontents);
 				}
 				//mode = 0;
@@ -343,8 +345,20 @@ int main(int argc, char *argv[])
 	world_load(&everything, "test.lvl");
 	//lvl_genrandom(&everything[0][0]);
 	char recording = 0;
+	long timenext =SDL_GetTicks();
 	for(i=0;!quitnow;i++)
 	{
+	//	if(clock()*1000/CLOCKS_PER_SEC < timenext){
+	//		continue;//busy loop
+	//		printf("waiting for next frame %ld %ld\n", clock()*1000/CLOCKS_PER_SEC , timenext);}
+		long ttimenext = SDL_GetTicks();
+		if(timenext-ttimenext > 1)
+			SDL_Delay(timenext-ttimenext);
+		else if (!(i %500))
+			printf("low framerate on 500th frame, took %d ms\n", 16-(int)(timenext-ttimenext));
+		else if( 16-(int)(timenext-ttimenext) > 25)
+			printf("really low framerate took %d ms\n",  16-(int)(timenext-ttimenext));
+		timenext = SDL_GetTicks()+16;
 		renderedframes ++;
 		parsekeys();
 		if(keystates.e)

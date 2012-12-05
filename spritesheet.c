@@ -21,7 +21,8 @@ ss_sheet ss_loadsheet(char *filename, int w, int h)
 	if(i == MAX_SHEETS-1)printf("ran out of image slots, will probably crash now (FIXME:keep track of loaded filenames)");
 	sheets[i].image = SDL_LoadBMP(filename);
 
-	SDL_SetColorKey( sheets[i].image, SDL_SRCCOLORKEY, 0xff00ff);
+	printf("set color key %s\n", filename);
+	SDL_SetColorKey( sheets[i].image, SDL_SRCCOLORKEY, 0x00ff00ff);
 
 	if(sheets[i].image == NULL || sheets[i].image->w == 0)
 	{
@@ -41,5 +42,9 @@ void ss_draw(ss_sheet sheet, SDL_Surface *target, int sprite, int x, int y)
 	sheets[sheet].size.y = sheets[sheet].size.h * (sprite / sheets[sheet].numacross);
 	SDL_Rect destpos = {x,y,0,0};
 
+	//SDL_SetColorKey( sheets[sheet].image, SDL_SRCCOLORKEY, 0xff00ff);
+/*	int cc;
+	SDL_GetColorKey(sheets[sheet].image, &cc);
+	printf("%hd\n", cc);*///what the fuck
 	SDL_BlitSurface(sheets[sheet].image,&sheets[sheet].size,target,&destpos);
 }
