@@ -150,8 +150,8 @@ void editmain(SDL_Surface *screen, world *curworld)
 	static int lastid = 0;
 
 
-	const int numlogics = 9;
-	char logics[][10] = {"default", "shrubbery", "testent", "player", "critter", "critter2", "snowspawn", "gnome", "deer"};
+	const int numlogics = 11;
+	char logics[][10] = {"default", "shrubbery", "testent", "player", "critter", "critter2", "snowspawn", "gnome", "deer", "pu_dbljmp", "pu_attack"};
 	while(!quitnow)
 	{
 		parsekeys();

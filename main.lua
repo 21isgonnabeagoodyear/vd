@@ -1,4 +1,9 @@
 framenum = 0
+has_attack = false
+has_dbljump = true--false
+hooks.warp(5,5)
+
+
 --playerdamagepoints = {}
 function framestart(notused)
 	if spawnnewplayer then
@@ -103,7 +108,7 @@ function player(id)
 		return
 	end
 
-	if keys[6] == 1 and keys[5]-keys[4] ~= 0 and not attackedintheair then--attack
+	if keys[6] == 1 and keys[5]-keys[4] ~= 0 and not attackedintheair and has_attack then--attack
 		local newpos
 		if keys[5]-keys[4] > 0 then
 			newpos = {hooks.nudge(pos[1], pos[2], playersize, playersize, 200, 0)}
@@ -145,7 +150,7 @@ function player(id)
 		--vx = vx * 0.5
 	else
 		vx = vx + 0.2*(keys[5]-keys[4])
-		if keys[1] == 1 and not jumpedintheair then
+		if keys[1] == 1 and not jumpedintheair  and has_dbljump then
 			vy = -7
 			--pos[1] = pos[1]+20*(keys[5]-keys[4])
 			jumpedintheair = true
@@ -277,7 +282,7 @@ function critter(id)
 end
 function critter2(id)
 	if framenum %2 ==0 then
-		critterai(id, 0.5, 0.5, 10,32, 11, 2,1, 8)
+		critterai(id, 0.5, 0.5, 10,32, 11, 2,1, 4)
 	end
 	local x,y = hooks.position()
 	dieifnec(x+5,y+20)
@@ -288,27 +293,45 @@ function gnome(id)
 end
 function deer(id)
 --function critterai(id, decisiveness, laziness, mintime,size, baseframe, animframes, animspeed)
-	if math.floor(framenum+id) % 2 <= 0.1 then
-		critterai(id, 0.8, 0.5, 40, 32, 23, 2,2, 4)
+	if (framenum+id) % 2 == 0 then
+		critterai(id, 0.8, 0.5, 40, 32, 23+32, 2,2, 4)
 	end
 end
 
 function snowspawn(id)
-	hooks.frame(36)
+	hooks.frame(67)
 	if math.floor(framenum+id) % 80 <= 0.1 then
 		local x,y = hooks.position()
-		hooks.spawn("snow", x+hooks.rand()-50, y-50)
+		hooks.spawn("snow", x+hooks.rand()-50, y-10)
 	end
 
 end
 function snow(id)
-	hooks.frame(35)
+	hooks.frame(35 + id%6)
 	local x,y = hooks.position()
-	hooks.move(x-math.sin(id+framenum*0.01), y+1+id%3)
-	if y > 320 then
+	hooks.move(x-math.sin(id*7+framenum*0.01), y+1+math.floor(id*43.2)%3)
+	if y > 320 or (hooks.terrainat(x+5,y+5) ~= 0 and y > 0) then
 		hooks.die()
 	end
 	dieifnec(x+5,y+5)
+end
+function pu_dbljmp(id)
+	hooks.frame(41)
+	local x, y = hooks.position()
+	if math.abs(pos[1] - x)+math.abs(pos[2]-y) < 20 then
+		has_dbljump = true
+		hooks.log("got double jump", 0)
+		hooks.die()
+	end
+end
+function pu_attack(id)
+	hooks.frame(42)
+	local x, y = hooks.position()
+	if math.abs(pos[1] - x)+math.abs(pos[2]-y) < 20 then
+		has_attack= true
+		hooks.log("got attack", 0)
+		hooks.die()
+	end
 end
 
 hooks.log("loaded main.lua", 0)
