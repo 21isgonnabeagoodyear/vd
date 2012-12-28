@@ -1,6 +1,22 @@
+zone = {x=0,y=0}
+powerupsusable = false
+
+do
+	local wrp = hooks.warp
+	function hooks.warp(x,y)
+		wrp(x,y)
+		zone.x = zone.x + x
+		zone.y = zone.y + y
+		hooks.log("x"..zone.x.."y"..zone.y,0)
+		if zone.x == 11 and zone.y == 6  then
+			powerupsusable = true
+		end
+	end
+end
+
 framenum = 0
 has_attack = false
-has_dbljump = true--false
+has_dbljump = false--true--false
 hooks.warp(5,5)
 
 
@@ -215,6 +231,9 @@ function player(id)
 end
 smoketimers = {}
 function smoke(id)
+	if smoketimers[id] == nil then
+		hooks.die()
+	end
 	smoketimers[id] = smoketimers[id]-1
 	if smoketimers[id]<0 then
 		hooks.die()
@@ -316,18 +335,26 @@ function snow(id)
 	dieifnec(x+5,y+5)
 end
 function pu_dbljmp(id)
+	if not powerupsusable then
+		hooks.frame(68)
+		return
+	end
 	hooks.frame(41)
 	local x, y = hooks.position()
-	if math.abs(pos[1] - x)+math.abs(pos[2]-y) < 20 then
+	if math.abs(pos[1] - (x+20))+math.abs(pos[2]-(y+20)) < 20 then
 		has_dbljump = true
 		hooks.log("got double jump", 0)
 		hooks.die()
 	end
 end
 function pu_attack(id)
+	if not powerupsusable then
+		hooks.frame(68)
+		return
+	end
 	hooks.frame(42)
 	local x, y = hooks.position()
-	if math.abs(pos[1] - x)+math.abs(pos[2]-y) < 20 then
+	if math.abs(pos[1] - (x+20))+math.abs(pos[2]-(y+20)) < 20 then
 		has_attack= true
 		hooks.log("got attack", 0)
 		hooks.die()
